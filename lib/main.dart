@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
+import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame_svg/flame_svg.dart';
 import 'package:flutter/material.dart';
@@ -11,10 +12,10 @@ void main() {
   runApp(GameWidget(game: MyGame()));
 }
 
-class MyGame extends FlameGame {
+class MyGame extends FlameGame with TapCallbacks {
   late Svg svgInstance;
   int get numSvgs => 200;
-  String get svgName => 'spaceship.svg';
+  String get svgName => 'android.svg';
 
   @override
   Future<void> onLoad() async {
@@ -31,6 +32,12 @@ class MyGame extends FlameGame {
     svgInstance.dispose();
     await _loadComponents();
     super.onHotReload();
+  }
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    super.onTapDown(event);
+    svgInstance.useMap = !svgInstance.useMap;
   }
 
   Future _loadComponents() async {
