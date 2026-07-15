@@ -60,9 +60,11 @@ packages:
   flame:
     dependency: "direct main"
     description:
-      path: "../flame/packages/flame"
-      relative: true
-    source: path
+      path: "packages/flame"
+      ref: "feat/extended-svg"
+      resolved-ref: "4b4d5f283fa1123959aa65d45d0bd55c4b977796"
+      url: "https://github.com/adario/flame.git"
+    source: git
     version: "1.37.0"
   flame_lint:
     dependency: "direct dev"
@@ -75,9 +77,11 @@ packages:
   flame_svg:
     dependency: "direct main"
     description:
-      path: "../flame/packages/flame_svg"
-      relative: true
-    source: path
+      path: "packages/flame_svg"
+      ref: "feat/extended-svg"
+      resolved-ref: "4b4d5f283fa1123959aa65d45d0bd55c4b977796"
+      url: "https://github.com/adario/flame.git"
+    source: git
     version: "1.12.1"
   flutter:
     dependency: "direct main"

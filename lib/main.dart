@@ -14,24 +14,40 @@ void main() {
 
 class MyGame extends FlameGame with TapCallbacks {
   late Svg svgInstance;
+  late SvgComponent svgComponent;
+  late TextComponent svgCacheSize;
   int get numSvgs => 200;
   String get svgName => 'android.svg';
+
+  Vector2 get center => Vector2(size.x * 0.5, size.y * 0.5);
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
     await _loadComponents();
+
+    final position = center..y = size.y * 0.245;
+    final t = TextComponent(
+      text: 'Tap to switch cache',
+      priority: 10000,
+      position: position,
+      anchor: Anchor.topCenter,
+    );
+    add(t);
+
+    final r = RemoveEffect(delay: 3.5);
+    t.add(r);
   }
 
   @override
-  Future<void> onHotReload() async {
+  void onHotReload() {
+    super.onHotReload();
     final c = children.toList();
     c.removeAt(0);
     removeAll(c);
-
+    remove(svgComponent);
     svgInstance.dispose();
-    await _loadComponents();
-    super.onHotReload();
+    _loadComponents();
   }
 
   @override
@@ -40,25 +56,25 @@ class MyGame extends FlameGame with TapCallbacks {
     svgInstance.useMap = !svgInstance.useMap;
   }
 
+  @override
+  void update(double dt) {
+    super.update(dt);
+    final mode = svgInstance.useMap ? 'Map' : 'MemoryCache';
+    svgCacheSize.text = '$mode #${svgInstance.cacheSize}';
+  }
+
   Future _loadComponents() async {
-    final extents = Vector2(size.x * 0.5, size.y * 0.5);
     svgInstance = await loadSvg(svgName);
     final svg = SvgComponent(
       key: ComponentKey.named(svgName),
       svg: svgInstance,
-      position: Vector2(size.x * 0.5, size.y * 0.5),
-      size: extents * 0.5,
+      position: center,
+      size: center * 0.5,
       priority: 1,
       anchor: Anchor.center,
     );
     add(svg);
-    final t = FpsTextComponent(
-      decimalPlaces: 1,
-      windowSize: 30,
-      priority: 1000,
-      position: Vector2(30, size.y - 30),
-    );
-    add(t);
+    svgComponent = svg;
 
     final rotate = RotateEffect.by(
       pi * 2,
@@ -69,12 +85,30 @@ class MyGame extends FlameGame with TapCallbacks {
     );
     svg.add(rotate);
 
-    _addSvgs(svgInstance, extents);
+    final fps = FpsTextComponent(
+      decimalPlaces: 1,
+      windowSize: 30,
+      priority: 1000,
+      position: Vector2(20, size.y - 30),
+      anchor: Anchor.centerLeft,
+    );
+    add(fps);
+
+    svgCacheSize = TextComponent(
+      text: '(empty)',
+      priority: 1000,
+      position: Vector2(size.x - 20, size.y - 30),
+      anchor: Anchor.centerRight,
+    );
+    add(svgCacheSize);
+
+    addSvgs();
   }
 
-  void _addSvgs(Svg svgInstance, Vector2 extents) {
-    final center = Vector2(size.x * 0.5, size.y * 0.5);
-    final radius = (extents.x + extents.y) * 0.25;
+  void addSvgs() {
+    final center = this.center;
+    final svgSize = center * 0.5;
+    final radius = (center.x + center.y) * 0.25;
     final step = (pi * 2.0) / numSvgs.toDouble();
     final sStep = 0.5 / numSvgs.toDouble();
 
@@ -90,7 +124,7 @@ class MyGame extends FlameGame with TapCallbacks {
       final s = SvgComponent(
         svg: svgInstance,
         position: position,
-        size: extents * 0.5,
+        size: svgSize,
         scale: Vector2.all(sScale),
         angle: angle + (pi * 0.5),
         anchor: Anchor.center,

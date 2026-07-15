@@ -34,9 +34,15 @@ dev_dependencies:
 
 dependency_overrides:
   flame:
-    path: ../flame/packages/flame
+    git:
+      url: https://github.com/adario/flame.git
+      path: packages/flame
+      ref: feat/extended-svg
   flame_svg:
-    path: ../flame/packages/flame_svg
+    git:
+      url: https://github.com/adario/flame.git
+      path: packages/flame_svg
+      ref: feat/extended-svg
 
 flutter:
   uses-material-design: true
