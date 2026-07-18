@@ -5,11 +5,30 @@ import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
+import 'package:flame/palette.dart';
+import 'package:flame/text.dart';
 import 'package:flame_svg/flame_svg.dart';
 import 'package:flutter/material.dart';
 
 void main() {
   runApp(GameWidget(game: MyGame()));
+}
+
+enum SvgMode {
+  standard,
+  integral,
+  fixed;
+
+  SvgMode get next {
+    switch (this) {
+      case .standard:
+        return .integral;
+      case .integral:
+        return .fixed;
+      case .fixed:
+        return .standard;
+    }
+  }
 }
 
 class MyGame extends FlameGame with TapCallbacks {
@@ -21,22 +40,22 @@ class MyGame extends FlameGame with TapCallbacks {
 
   Vector2 get center => Vector2(size.x * 0.5, size.y * 0.5);
 
+  late ToggleButtonComponent typeComponent;
+  late AdvancedButtonComponent modeComponent;
+
+  SvgMode _mode = .standard;
+
+  TextRenderer get textRenderer => TextPaint(
+    style: TextStyle(
+      fontSize: 18,
+      color: BasicPalette.white.color,
+    ),
+  );
+
   @override
   Future<void> onLoad() async {
     await super.onLoad();
     await _loadComponents();
-
-    final position = center..y = size.y * 0.245;
-    final t = TextComponent(
-      text: 'Tap to switch cache',
-      priority: 10000,
-      position: position,
-      anchor: Anchor.topCenter,
-    );
-    add(t);
-
-    final r = RemoveEffect(delay: 3.5);
-    t.add(r);
   }
 
   @override
@@ -51,16 +70,25 @@ class MyGame extends FlameGame with TapCallbacks {
   }
 
   @override
-  void onTapDown(TapDownEvent event) {
-    super.onTapDown(event);
-    svgInstance.useMap = !svgInstance.useMap;
-  }
-
-  @override
   void update(double dt) {
     super.update(dt);
-    final mode = svgInstance.useMap ? 'Map' : 'MemoryCache';
-    svgCacheSize.text = '$mode #${svgInstance.cacheSize}';
+    final mode = _mode.toString().replaceAll('SvgMode.', '');
+    final type = svgInstance.useMap ? 'Map' : 'MemoryCache';
+    svgCacheSize.text = '$type ($mode) #${svgInstance.cacheSize}';
+  }
+
+  void _applyMode() {
+    switch (_mode) {
+      case .standard:
+        svgInstance.integralSize = false;
+        svgInstance.fixedRatio = false;
+      case .integral:
+        svgInstance.integralSize = true;
+        svgInstance.fixedRatio = false;
+      case .fixed:
+        svgInstance.integralSize = false;
+        svgInstance.fixedRatio = true;
+    }
   }
 
   Future _loadComponents() async {
@@ -89,20 +117,85 @@ class MyGame extends FlameGame with TapCallbacks {
       decimalPlaces: 1,
       windowSize: 30,
       priority: 1000,
-      position: Vector2(20, size.y - 30),
-      anchor: Anchor.centerLeft,
+      position: Vector2(10, size.y - 30),
+      anchor: Anchor.bottomLeft,
+      textRenderer: textRenderer,
     );
     add(fps);
 
     svgCacheSize = TextComponent(
       text: '(empty)',
       priority: 1000,
-      position: Vector2(size.x - 20, size.y - 30),
-      anchor: Anchor.centerRight,
+      position: Vector2(size.x - 10, size.y - 30),
+      anchor: Anchor.bottomRight,
+      textRenderer: textRenderer,
     );
     add(svgCacheSize);
 
     addSvgs();
+    addButtons();
+  }
+
+  void addButtons() {
+    final buttonSize = Vector2(90, 30);
+    const typeText = 'Type';
+    typeComponent = ToggleButtonComponent(
+      priority: 10,
+      position: Vector2(20, size.y * 0.1),
+      size: buttonSize,
+      anchor: Anchor.topLeft,
+      defaultLabel: TextComponent(
+        text: typeText,
+        textRenderer: textRenderer,
+      ),
+      defaultSelectedLabel: TextComponent(
+        text: typeText,
+        textRenderer: TextPaint(
+          style: TextStyle(
+            fontSize: 20,
+            color: BasicPalette.white.color,
+          ),
+        ),
+      ),
+      defaultSkin: RoundedRectComponent()
+        ..setColor(
+          const Color.fromRGBO(0, 0, 200, 1),
+        ),
+      defaultSelectedSkin: RoundedRectComponent()
+        ..setColor(
+          const Color.fromRGBO(0, 0, 200, 1),
+        ),
+      onSelectedChanged: (value) {
+        svgInstance.useMap = !svgInstance.useMap;
+      },
+    );
+    add(typeComponent);
+
+    const modeText = 'Mode';
+    modeComponent = AdvancedButtonComponent(
+      priority: 10,
+      position: Vector2(size.x - 20, size.y * 0.1),
+      size: buttonSize,
+      anchor: Anchor.topRight,
+      defaultLabel: TextComponent(
+        text: modeText,
+        textRenderer: textRenderer,
+      ),
+      defaultSkin: RoundedRectComponent()
+        ..setColor(
+          const Color.fromRGBO(200, 0, 0, 1),
+        ),
+      onReleased: () {
+        _mode = _mode.next;
+        _applyMode();
+      },
+    );
+    add(modeComponent);
+  }
+
+  void removeButtons() {
+    remove(typeComponent);
+    remove(modeComponent);
   }
 
   void addSvgs() {
@@ -134,5 +227,24 @@ class MyGame extends FlameGame with TapCallbacks {
       angle += step;
       sScale -= sStep;
     }
+  }
+}
+
+class RoundedRectComponent extends PositionComponent with HasPaint {
+  @override
+  void render(Canvas canvas) {
+    canvas.drawRRect(
+      RRect.fromLTRBAndCorners(
+        0,
+        0,
+        width,
+        height,
+        topLeft: Radius.circular(height),
+        topRight: Radius.circular(height),
+        bottomRight: Radius.circular(height),
+        bottomLeft: Radius.circular(height),
+      ),
+      paint,
+    );
   }
 }

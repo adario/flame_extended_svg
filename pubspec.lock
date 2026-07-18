@@ -62,7 +62,7 @@ packages:
     description:
       path: "packages/flame"
       ref: "feat/extended-svg"
-      resolved-ref: "4b4d5f283fa1123959aa65d45d0bd55c4b977796"
+      resolved-ref: "10e1351b3027af545274d347d1aff3196b73a9b7"
       url: "https://github.com/adario/flame.git"
     source: git
     version: "1.37.0"
@@ -79,7 +79,7 @@ packages:
     description:
       path: "packages/flame_svg"
       ref: "feat/extended-svg"
-      resolved-ref: "4b4d5f283fa1123959aa65d45d0bd55c4b977796"
+      resolved-ref: "10e1351b3027af545274d347d1aff3196b73a9b7"
       url: "https://github.com/adario/flame.git"
     source: git
     version: "1.12.1"
