@@ -7,6 +7,9 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/palette.dart';
 import 'package:flame/text.dart';
+import 'package:flame_extended_svg/rounded_rect_component.dart';
+import 'package:flame_extended_svg/svg_cache_mode.dart';
+import 'package:flame_extended_svg/svg_cache_size.dart';
 import 'package:flame_svg/flame_svg.dart';
 import 'package:flutter/material.dart';
 
@@ -14,36 +17,22 @@ void main() {
   runApp(GameWidget(game: MyGame()));
 }
 
-enum SvgMode {
-  standard,
-  integral,
-  fixed;
-
-  SvgMode get next {
-    switch (this) {
-      case .standard:
-        return .integral;
-      case .integral:
-        return .fixed;
-      case .fixed:
-        return .standard;
-    }
-  }
-}
-
 class MyGame extends FlameGame with TapCallbacks {
   late Svg svgInstance;
   late SvgComponent svgComponent;
-  late TextComponent svgCacheSize;
+  late TextComponent svgCache;
   int get numSvgs => 200;
   String get svgName => 'android.svg';
 
   Vector2 get center => Vector2(size.x * 0.5, size.y * 0.5);
 
-  late ToggleButtonComponent typeComponent;
+  late AdvancedButtonComponent sizeComponent;
+  late TextComponent sizeText;
   late AdvancedButtonComponent modeComponent;
+  late TextComponent modeText;
 
-  SvgMode _mode = .standard;
+  SvgCacheMode _mode = .legacy;
+  SvgCacheSize _size = .standard;
 
   TextRenderer get textRenderer => TextPaint(
     style: TextStyle(
@@ -72,14 +61,13 @@ class MyGame extends FlameGame with TapCallbacks {
   @override
   void update(double dt) {
     super.update(dt);
-    final mode = _mode.toString().replaceAll('SvgMode.', '');
-    final type = svgInstance.useMap ? 'Map' : 'MemoryCache';
-    svgCacheSize.text = '$type ($mode) #${svgInstance.cacheSize}';
+    svgCache.text =
+        'Cache #: ${svgInstance.cacheUsage}/${_size.quantityString}';
   }
 
   void _applyMode() {
     switch (_mode) {
-      case .standard:
+      case .legacy:
         svgInstance.integralSize = false;
         svgInstance.fixedRatio = false;
       case .integral:
@@ -89,6 +77,12 @@ class MyGame extends FlameGame with TapCallbacks {
         svgInstance.integralSize = false;
         svgInstance.fixedRatio = true;
     }
+    modeText.text = _mode.toString();
+  }
+
+  void _applySize() {
+    svgInstance.cacheSize = _size.quantity;
+    sizeText.text = _size.toString();
   }
 
   Future _loadComponents() async {
@@ -99,7 +93,7 @@ class MyGame extends FlameGame with TapCallbacks {
       position: center,
       size: center * 0.5,
       priority: 1,
-      anchor: Anchor.center,
+      anchor: .center,
     );
     add(svg);
     svgComponent = svg;
@@ -118,19 +112,19 @@ class MyGame extends FlameGame with TapCallbacks {
       windowSize: 30,
       priority: 1000,
       position: Vector2(10, size.y - 30),
-      anchor: Anchor.bottomLeft,
+      anchor: .bottomLeft,
       textRenderer: textRenderer,
     );
     add(fps);
 
-    svgCacheSize = TextComponent(
-      text: '(empty)',
+    svgCache = TextComponent(
+      text: '…',
       priority: 1000,
       position: Vector2(size.x - 10, size.y - 30),
-      anchor: Anchor.bottomRight,
+      anchor: .bottomRight,
       textRenderer: textRenderer,
     );
-    add(svgCacheSize);
+    add(svgCache);
 
     addSvgs();
     addButtons();
@@ -138,64 +132,56 @@ class MyGame extends FlameGame with TapCallbacks {
 
   void addButtons() {
     final buttonSize = Vector2(90, 30);
-    const typeText = 'Type';
-    typeComponent = ToggleButtonComponent(
-      priority: 10,
-      position: Vector2(20, size.y * 0.1),
-      size: buttonSize,
-      anchor: Anchor.topLeft,
-      defaultLabel: TextComponent(
-        text: typeText,
-        textRenderer: textRenderer,
-      ),
-      defaultSelectedLabel: TextComponent(
-        text: typeText,
-        textRenderer: TextPaint(
-          style: TextStyle(
-            fontSize: 20,
-            color: BasicPalette.white.color,
-          ),
-        ),
-      ),
-      defaultSkin: RoundedRectComponent()
-        ..setColor(
-          const Color.fromRGBO(0, 0, 200, 1),
-        ),
-      defaultSelectedSkin: RoundedRectComponent()
-        ..setColor(
-          const Color.fromRGBO(0, 0, 200, 1),
-        ),
-      onSelectedChanged: (value) {
-        svgInstance.useMap = !svgInstance.useMap;
-      },
-    );
-    add(typeComponent);
-
-    const modeText = 'Mode';
-    modeComponent = AdvancedButtonComponent(
+    sizeComponent = AdvancedButtonComponent(
       priority: 10,
       position: Vector2(size.x - 20, size.y * 0.1),
       size: buttonSize,
-      anchor: Anchor.topRight,
+      anchor: .topRight,
       defaultLabel: TextComponent(
-        text: modeText,
+        text: 'Size',
         textRenderer: textRenderer,
       ),
       defaultSkin: RoundedRectComponent()
-        ..setColor(
-          const Color.fromRGBO(200, 0, 0, 1),
-        ),
+        ..setColor(BasicPalette.darkBlue.color),
+      onReleased: () {
+        _size = _size.next;
+        _applySize();
+      },
+    );
+    add(sizeComponent);
+    sizeText = TextComponent(
+      text: '$_size',
+      priority: sizeComponent.priority,
+      anchor: .topCenter,
+      position: sizeComponent.position + Vector2(-buttonSize.x / 2, 30),
+      textRenderer: textRenderer,
+    );
+    add(sizeText);
+
+    modeComponent = AdvancedButtonComponent(
+      priority: 10,
+      position: Vector2(20, size.y * 0.1),
+      size: buttonSize,
+      anchor: .topLeft,
+      defaultLabel: TextComponent(
+        text: 'Mode',
+        textRenderer: textRenderer,
+      ),
+      defaultSkin: RoundedRectComponent()..setColor(BasicPalette.darkRed.color),
       onReleased: () {
         _mode = _mode.next;
         _applyMode();
       },
     );
     add(modeComponent);
-  }
-
-  void removeButtons() {
-    remove(typeComponent);
-    remove(modeComponent);
+    modeText = TextComponent(
+      text: '$_mode',
+      priority: modeComponent.priority,
+      anchor: .topCenter,
+      position: modeComponent.position + Vector2(buttonSize.x / 2, 30),
+      textRenderer: textRenderer,
+    );
+    add(modeText);
   }
 
   void addSvgs() {
@@ -220,31 +206,12 @@ class MyGame extends FlameGame with TapCallbacks {
         size: svgSize,
         scale: Vector2.all(sScale),
         angle: angle + (pi * 0.5),
-        anchor: Anchor.center,
+        anchor: .center,
         paint: p,
       );
       add(s);
       angle += step;
       sScale -= sStep;
     }
-  }
-}
-
-class RoundedRectComponent extends PositionComponent with HasPaint {
-  @override
-  void render(Canvas canvas) {
-    canvas.drawRRect(
-      RRect.fromLTRBAndCorners(
-        0,
-        0,
-        width,
-        height,
-        topLeft: Radius.circular(height),
-        topRight: Radius.circular(height),
-        bottomRight: Radius.circular(height),
-        bottomLeft: Radius.circular(height),
-      ),
-      paint,
-    );
   }
 }
