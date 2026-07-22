@@ -37,15 +37,18 @@ dependency_overrides:
     git:
       url: https://github.com/adario/flame.git
       path: packages/flame
-      ref: feat/extended-svg
+      ref: feat/integral-sized-svg
   flame_svg:
     git:
       url: https://github.com/adario/flame.git
       path: packages/flame_svg
-      ref: feat/extended-svg
+      ref: feat/integral-sized-svg
 
 flutter:
   uses-material-design: true
   assets:
     - assets/android.svg
     - assets/spaceship.svg
+    - assets/cone.svg
+    - assets/prism.svg
+    - assets/pyramid.svg
