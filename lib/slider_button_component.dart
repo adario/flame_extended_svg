@@ -1,4 +1,4 @@
-import 'dart:ui' as ui;
+import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
@@ -6,7 +6,7 @@ import 'package:flame_extended_svg/rounded_rect_component.dart';
 import 'package:flutter/foundation.dart';
 
 class SliderButtonComponent extends PositionComponent
-    with TapCallbacks, DragCallbacks {
+    with TapCallbacks, DragCallbacks, HoverCallbacks {
   SliderButtonComponent({
     required this.min,
     required this.max,
@@ -14,10 +14,10 @@ class SliderButtonComponent extends PositionComponent
     this.step,
     this.trackHeight = 10,
     this.thumbSize = 24,
-    this.trackColor = const ui.Color(0xFF5E5E5E),
-    this.thumbColor = const ui.Color(0xFFFFFFFF),
-    this.activeTrackColor = const ui.Color(0xFFB3C7FF),
-    this.activeThumbColor = const ui.Color(0xFF6FA8FF),
+    this.trackColor = const Color(0xFF5E5E5E),
+    this.thumbColor = const Color(0xFFFFFFFF),
+    this.activeTrackColor = const Color(0xFFB3C7FF),
+    this.activeThumbColor = const Color(0xFF6FA8FF),
     this.labelSpacing = 12,
     this.minLabel,
     this.currentLabel,
@@ -38,10 +38,10 @@ class SliderButtonComponent extends PositionComponent
   final double trackHeight;
   final double thumbSize;
 
-  final ui.Color trackColor;
-  final ui.Color thumbColor;
-  final ui.Color activeTrackColor;
-  final ui.Color activeThumbColor;
+  final Color trackColor;
+  final Color thumbColor;
+  final Color activeTrackColor;
+  final Color activeThumbColor;
   final double labelSpacing;
 
   final TextComponent? minLabel;
@@ -61,6 +61,7 @@ class SliderButtonComponent extends PositionComponent
   }
 
   bool _isDragging = false;
+  bool _isHovering = false;
 
   late final RoundedRectComponent _track;
   late final RoundedRectComponent _thumb;
@@ -73,41 +74,41 @@ class SliderButtonComponent extends PositionComponent
     _track = RoundedRectComponent()
       ..position = Vector2(0, 0)
       ..size = Vector2(size.x, trackHeight)
-      ..anchor = Anchor.topLeft
+      ..anchor = .topLeft
       ..setColor(trackColor);
     add(_track);
 
     _thumb = RoundedRectComponent()
       ..position = Vector2(0, trackHeight / 2)
       ..size = Vector2(thumbSize, thumbSize)
-      ..anchor = Anchor.center
+      ..anchor = .center
       ..setColor(thumbColor);
     add(_thumb);
 
     if (minLabel != null) {
       final label = minLabel!;
-      label.anchor = Anchor.topLeft;
+      label.anchor = .topLeft;
       label.position = Vector2(0, trackHeight + labelSpacing);
       add(label);
     }
 
     if (currentLabel != null) {
       final label = currentLabel!;
-      label.anchor = Anchor.topCenter;
+      label.anchor = .topCenter;
       label.position = Vector2(size.x / 2, trackHeight + labelSpacing);
       add(label);
     }
 
     if (titleLabel != null) {
       final label = titleLabel!;
-      label.anchor = Anchor.bottomCenter;
+      label.anchor = .bottomCenter;
       label.position = Vector2(size.x / 2, -(trackHeight + labelSpacing));
       add(label);
     }
 
     if (maxLabel != null) {
       final label = maxLabel!;
-      label.anchor = Anchor.topRight;
+      label.anchor = .topRight;
       label.position = Vector2(size.x, trackHeight + labelSpacing);
       add(label);
     }
@@ -134,6 +135,13 @@ class SliderButtonComponent extends PositionComponent
   void onTapDown(TapDownEvent event) {
     _isDragging = true;
     _applyVisualFeedback();
+
+    // Guard against invalid local event positions.
+    var local = event.localPosition;
+    if (local.x.isNaN) {
+      local = absoluteToLocal(event.canvasPosition);
+    }
+    _updateFromDrag(local.x);
   }
 
   @override
@@ -149,6 +157,31 @@ class SliderButtonComponent extends PositionComponent
   }
 
   @override
+  void onHoverEnter() {
+    // Only apply hover feedback when not dragging.
+    if (!_isDragging) {
+      _isHovering = true;
+      _applyVisualFeedback();
+    }
+  }
+
+  @override
+  void onHoverExit() {
+    if (!_isDragging) {
+      _isHovering = false;
+      _applyVisualFeedback();
+    }
+  }
+
+  @override
+  void onHoverCancel() {
+    if (!_isDragging) {
+      _isHovering = false;
+      _applyVisualFeedback();
+    }
+  }
+
+  @override
   void onDragStart(DragStartEvent event) {
     super.onDragStart(event);
     _isDragging = true;
@@ -158,7 +191,12 @@ class SliderButtonComponent extends PositionComponent
 
   @override
   void onDragUpdate(DragUpdateEvent event) {
-    _updateFromDrag(event.localEndPosition.x);
+    // Guard against invalid local event positions.
+    var local = event.localEndPosition;
+    if (local.x.isNaN) {
+      local = absoluteToLocal(event.canvasEndPosition);
+    }
+    _updateFromDrag(local.x);
   }
 
   @override
@@ -201,9 +239,10 @@ class SliderButtonComponent extends PositionComponent
   }
 
   void _applyVisualFeedback() {
-    final trackColorToUse = _isDragging ? activeTrackColor : trackColor;
-    final thumbColorToUse = _isDragging ? activeThumbColor : thumbColor;
-    final visualGrow = _isDragging ? 2.0 : 0.0;
+    final active = _isDragging || _isHovering;
+    final trackColorToUse = active ? activeTrackColor : trackColor;
+    final thumbColorToUse = active ? activeThumbColor : thumbColor;
+    final visualGrow = active ? 2.0 : 0.0;
 
     _track.setColor(trackColorToUse);
     _thumb.setColor(thumbColorToUse);

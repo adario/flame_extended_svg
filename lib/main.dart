@@ -12,6 +12,7 @@ import 'package:flame_extended_svg/slider_button_component.dart';
 import 'package:flame_extended_svg/svg_cache_mode.dart';
 import 'package:flame_extended_svg/svg_cache_size.dart';
 import 'package:flame_svg/flame_svg.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -167,12 +168,12 @@ class MyGame extends FlameGame with TapCallbacks {
 
   void addButtons() {
     final buttonSize = Vector2(90, 30);
-    final y = size.y * 0.075;
+    final y = size.y * (kIsWeb ? 0.025 : 0.075);
     addSizeButton(buttonSize, y: y);
     addModeButton(buttonSize, y: y);
     addSvgButton(buttonSize, y: y);
 
-    addSliderButton(size.y * 0.2);
+    addSliderButton(size.y * (kIsWeb ? 0.175 : 0.2));
   }
 
   void addSliderButton(double y) {
@@ -194,6 +195,7 @@ class MyGame extends FlameGame with TapCallbacks {
     );
 
     sliderComponent = SliderButtonComponent(
+      priority: 10,
       position: Vector2(size.x * 0.5, y),
       size: Vector2(size.x * 0.55, 60),
       anchor: .topCenter,
@@ -317,7 +319,7 @@ class MyGame extends FlameGame with TapCallbacks {
     final sStep = 0.66667 / numSvgComponents.toDouble();
     final aStep = 0.75 / numSvgComponents.toDouble();
 
-    var angle = 0.0;
+    var angle = step;
     var sScale = 1.0;
     var aScale = 1.0;
     for (var i = 0; i < numSvgComponents; ++i) {
