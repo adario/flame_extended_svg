@@ -60,6 +60,8 @@ class SliderButtonComponent extends PositionComponent
     valueNotifier.value = normalized;
   }
 
+  double get amplitude => max - min;
+
   bool _isDragging = false;
   bool _isHovering = false;
 
@@ -220,7 +222,7 @@ class SliderButtonComponent extends PositionComponent
 
     final constrainedX = dragX.clamp(0.0, size.x);
     final normalized = constrainedX / size.x;
-    final rawValue = min + (normalized * (max - min));
+    final rawValue = min + (normalized * amplitude);
     value = rawValue;
   }
 
@@ -231,7 +233,7 @@ class SliderButtonComponent extends PositionComponent
 
   void _syncThumbPosition() {
     final visualThumbSize = _isDragging ? thumbSize + 2.0 : thumbSize;
-    final ratio = (value - min) / (max - min);
+    final ratio = (value - min) / amplitude;
     final clampedRatio = ratio.clamp(0.0, 1.0);
     final x =
         (visualThumbSize / 2) + (clampedRatio * (size.x - visualThumbSize));
