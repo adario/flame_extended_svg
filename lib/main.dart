@@ -23,6 +23,7 @@ class MyGame extends FlameGame with TapCallbacks {
   late Svg svgInstance;
   late SvgComponent svgComponent;
   late TextComponent svgCache;
+  var _masterAngle = 0.0;
   final int _minSvgComponents = 10;
   final int _maxSvgComponents = 500;
   int _numSvgs = 200;
@@ -34,6 +35,16 @@ class MyGame extends FlameGame with TapCallbacks {
     'pyramid.svg',
     'prism.svg',
     'spaceship.svg',
+    'spaceship_2.svg',
+    'spaceship_3.svg',
+    'spaceship_4.svg',
+    'spaceship_5.svg',
+    'spaceship_6.svg',
+    'falcon.svg',
+    'cylon.svg',
+    'robot.svg',
+    'shuttle.svg',
+    'rocket_ship.svg',
   ];
   String get svgFilename => _svgs[_currentSvg];
   String get svgName => svgFilename.replaceAll('.svg', '');
@@ -61,18 +72,16 @@ class MyGame extends FlameGame with TapCallbacks {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    await _loadComponents();
+    await _loadComponents(
+      fixedRatio: _mode.fixedRatio,
+      cacheSize: _size.quantity,
+    );
   }
 
   @override
   void onHotReload() {
     super.onHotReload();
-    final c = children.toList();
-    c.removeAt(0);
-    removeAll(c);
-    remove(svgComponent);
-    svgInstance.dispose();
-    _loadComponents();
+    _load();
   }
 
   @override
@@ -80,6 +89,17 @@ class MyGame extends FlameGame with TapCallbacks {
     super.update(dt);
     svgCache.text =
         'Cache #: ${svgInstance.cacheUsage}/${_size.quantityString}';
+  }
+
+  Future<void> _load() async {
+    _masterAngle = svgComponent.angle;
+    final c = children.toList();
+    removeAll(c);
+    svgInstance.dispose();
+    await _loadComponents(
+      fixedRatio: svgInstance.fixedRatio,
+      cacheSize: svgInstance.cacheSize,
+    );
   }
 
   void _applyMode() {
@@ -97,7 +117,8 @@ class MyGame extends FlameGame with TapCallbacks {
     sizeText.text = _size.toString();
   }
 
-  void _applySvg() {
+  Future<void> _applySvg() async {
+    _masterAngle = svgComponent.angle;
     svgButtonText.text = svgName;
     _loadSvg(
       fixedRatio: svgInstance.fixedRatio,
@@ -121,13 +142,17 @@ class MyGame extends FlameGame with TapCallbacks {
     );
   }
 
-  Future _loadComponents() async {
-    await _loadSvg();
+  Future _loadComponents({
+    bool fixedRatio = false,
+    int cacheSize = Svg.defaultCacheSize,
+  }) async {
+    await _loadSvg(fixedRatio: fixedRatio, cacheSize: cacheSize);
     final svg = SvgComponent(
       key: ComponentKey.named(svgFilename),
       svg: svgInstance,
       position: center,
       size: center * 0.5,
+      angle: _masterAngle,
       priority: 1,
       anchor: .center,
     );
@@ -197,12 +222,12 @@ class MyGame extends FlameGame with TapCallbacks {
     sliderComponent = SliderButtonComponent(
       priority: 10,
       position: Vector2(size.x * 0.5, y),
-      size: Vector2(size.x * 0.55, 60),
+      size: Vector2(size.x * 0.75, 60),
       anchor: .topCenter,
       min: _minSvgComponents.toDouble(),
       max: _maxSvgComponents.toDouble(),
       initialValue: numSvgComponents.toDouble(),
-      step: 10,
+      step: 5,
       minLabel: minLabel,
       currentLabel: currentLabel,
       maxLabel: maxLabel,
@@ -210,10 +235,13 @@ class MyGame extends FlameGame with TapCallbacks {
     );
     sliderComponent.valueNotifier.addListener(() {
       final value = sliderComponent.value;
-      currentLabel.text = value.toStringAsFixed(0);
-      _numSvgs = value.toInt();
-      removeSvgs();
-      addSvgs();
+      final numSvgs = value.toInt();
+      if (_numSvgs != numSvgs) {
+        currentLabel.text = numSvgs.toString();
+        _numSvgs = numSvgs;
+        removeSvgs();
+        addSvgs();
+      }
     });
     add(sliderComponent);
   }

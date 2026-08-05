@@ -11,6 +11,8 @@ enum SvgCacheMode {
     }
   }
 
+  bool get fixedRatio => this == .fixed;
+
   @override
   String toString() => super.toString().replaceAll('SvgCacheMode.', '');
 }
