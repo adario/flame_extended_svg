@@ -20,9 +20,15 @@ void main() {
 }
 
 class MyGame extends FlameGame with TapCallbacks {
+  static const _uiPriority = 1000;
+  static const _hudPriority = 10000;
+  static const _svgPriority = 1;
+
   late Svg svgInstance;
   late SvgComponent svgComponent;
   late TextComponent svgCache;
+  late Component svgContainer;
+
   var _masterAngle = 0.0;
   final int _minSvgComponents = 10;
   final int _maxSvgComponents = 500;
@@ -93,7 +99,7 @@ class MyGame extends FlameGame with TapCallbacks {
 
   Future<void> _load() async {
     _masterAngle = svgComponent.angle;
-    final c = children.toList();
+    final c = children.toList(growable: false);
     removeAll(c);
     svgInstance.dispose();
     await _loadComponents(
@@ -135,8 +141,7 @@ class MyGame extends FlameGame with TapCallbacks {
       fixedRatio: fixedRatio,
       cacheSize: cacheSize,
     );
-    final svgs = children.toList();
-    svgs.removeWhere((component) => component is! SvgComponent);
+    final svgs = svgContainer.children.toList(growable: false);
     svgs.forEach(
       (component) => (component as SvgComponent).svg = svgInstance,
     );
@@ -146,6 +151,8 @@ class MyGame extends FlameGame with TapCallbacks {
     bool fixedRatio = false,
     int cacheSize = Svg.defaultCacheSize,
   }) async {
+    svgContainer = Component();
+    add(svgContainer);
     await _loadSvg(fixedRatio: fixedRatio, cacheSize: cacheSize);
     final svg = SvgComponent(
       key: ComponentKey.named(svgFilename),
@@ -153,10 +160,9 @@ class MyGame extends FlameGame with TapCallbacks {
       position: center,
       size: center * 0.5,
       angle: _masterAngle,
-      priority: 1,
       anchor: .center,
     );
-    add(svg);
+    svgContainer.add(svg);
     svgComponent = svg;
 
     final rotate = RotateEffect.by(
@@ -333,10 +339,7 @@ class MyGame extends FlameGame with TapCallbacks {
   }
 
   void removeSvgs() {
-    final svgs = children.toList();
-    svgs.removeWhere((component) => component is! SvgComponent);
-    svgs.remove(svgComponent);
-    removeAll(svgs);
+    svgContainer.removeWhere((component) => component != svgComponent);
   }
 
   void addSvgs() {
@@ -350,7 +353,8 @@ class MyGame extends FlameGame with TapCallbacks {
     var angle = step;
     var sScale = 1.0;
     var aScale = 1.0;
-    for (var i = 0; i < numSvgComponents; ++i) {
+    final svgs = <SvgComponent>[];
+    for (var i = 0; i < _numSvgs; ++i) {
       final position = Vector2(
         center.x + (radius * cos(angle)),
         center.y + (radius * sin(angle)),
@@ -365,11 +369,13 @@ class MyGame extends FlameGame with TapCallbacks {
         angle: angle + (pi * 0.5),
         anchor: .center,
         paint: p,
+        priority: _numSvgs + _svgPriority - i,
       );
-      add(s);
+      svgs.add(s);
       angle += step;
       sScale -= sStep;
       aScale -= aStep;
     }
+    svgContainer.addAll(svgs.reversed);
   }
 }
