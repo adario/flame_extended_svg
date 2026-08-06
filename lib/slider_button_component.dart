@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
+import 'package:flame_extended_svg/position_paint_component.dart';
 import 'package:flame_extended_svg/rounded_rect_component.dart';
 import 'package:flutter/foundation.dart';
 
@@ -23,6 +24,8 @@ class SliderButtonComponent extends PositionComponent
     this.currentLabel,
     this.maxLabel,
     this.titleLabel,
+    this.track,
+    this.thumb,
     super.position,
     super.size,
     super.priority,
@@ -44,6 +47,8 @@ class SliderButtonComponent extends PositionComponent
   final Color activeThumbColor;
   final double labelSpacing;
 
+  final PositionPaintComponent? track;
+  final PositionPaintComponent? thumb;
   final TextComponent? minLabel;
   final TextComponent? currentLabel;
   final TextComponent? maxLabel;
@@ -65,22 +70,22 @@ class SliderButtonComponent extends PositionComponent
   bool _isDragging = false;
   bool _isHovering = false;
 
-  late final RoundedRectComponent _track;
-  late final RoundedRectComponent _thumb;
+  late final PositionPaintComponent _track;
+  late final PositionPaintComponent _thumb;
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
     valueNotifier.addListener(_handleValueChanged);
 
-    _track = RoundedRectComponent()
+    _track = track ?? RoundedRectComponent()
       ..position = Vector2(0, 0)
       ..size = Vector2(size.x, trackHeight)
       ..anchor = .topLeft
       ..setColor(trackColor);
     add(_track);
 
-    _thumb = RoundedRectComponent()
+    _thumb = thumb ?? RoundedRectComponent()
       ..position = Vector2(0, trackHeight / 2)
       ..size = Vector2(thumbSize, thumbSize)
       ..anchor = .center
@@ -115,8 +120,8 @@ class SliderButtonComponent extends PositionComponent
       add(label);
     }
 
-    _handleValueChanged();
     _applyVisualFeedback();
+    _syncLabels();
   }
 
   @override

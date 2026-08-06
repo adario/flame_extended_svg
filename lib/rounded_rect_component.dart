@@ -1,7 +1,7 @@
-import 'package:flame/components.dart';
+import 'package:flame_extended_svg/position_paint_component.dart';
 import 'package:flutter/material.dart';
 
-class RoundedRectComponent extends PositionComponent with HasPaint {
+class RoundedRectComponent extends PositionPaintComponent {
   @override
   void render(Canvas canvas) {
     canvas.drawRRect(
