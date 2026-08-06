@@ -108,7 +108,7 @@ class MyGame extends FlameGame with TapCallbacks {
     );
   }
 
-  void _applyMode() {
+  Future<void> _applyMode() async {
     switch (_mode) {
       case .integral:
         svgInstance.fixedRatio = false;
@@ -118,7 +118,7 @@ class MyGame extends FlameGame with TapCallbacks {
     modeText.text = _mode.toString();
   }
 
-  void _applySize() {
+  Future<void> _applySize() async {
     svgInstance.cacheSize = _size.quantity;
     sizeText.text = _size.toString();
   }
@@ -177,7 +177,7 @@ class MyGame extends FlameGame with TapCallbacks {
     final fps = FpsTextComponent(
       decimalPlaces: 1,
       windowSize: 30,
-      priority: 1000,
+      priority: _hudPriority,
       position: Vector2(10, size.y - 30),
       anchor: .bottomLeft,
       textRenderer: textRenderer,
@@ -186,7 +186,7 @@ class MyGame extends FlameGame with TapCallbacks {
 
     svgCache = TextComponent(
       text: '…',
-      priority: 1000,
+      priority: _hudPriority,
       position: Vector2(size.x - 10, size.y - 30),
       anchor: .bottomRight,
       textRenderer: textRenderer,
@@ -204,46 +204,42 @@ class MyGame extends FlameGame with TapCallbacks {
     addModeButton(buttonSize, y: y);
     addSvgButton(buttonSize, y: y);
 
-    addSliderButton(size.y * (kIsWeb ? 0.175 : 0.2));
+    addSliderButton(size.y * (kIsWeb ? 0.2 : 0.25));
   }
 
   void addSliderButton(double y) {
-    final minLabel = TextComponent(
-      text: '$_minSvgComponents',
-      textRenderer: textRenderer,
-    );
-    final currentLabel = TextComponent(
-      text: '$numSvgComponents',
-      textRenderer: textRenderer,
-    );
-    final maxLabel = TextComponent(
-      text: '$_maxSvgComponents',
-      textRenderer: textRenderer,
-    );
-    final titleLabel = TextComponent(
-      text: 'Components',
-      textRenderer: textRenderer,
-    );
-
     sliderComponent = SliderButtonComponent(
-      priority: 10,
+      priority: _uiPriority,
       position: Vector2(size.x * 0.5, y),
       size: Vector2(size.x * 0.75, 60),
-      anchor: .topCenter,
+      anchor: .center,
+      labelSpacing: 8,
       min: _minSvgComponents.toDouble(),
       max: _maxSvgComponents.toDouble(),
       initialValue: numSvgComponents.toDouble(),
       step: 5,
-      minLabel: minLabel,
-      currentLabel: currentLabel,
-      maxLabel: maxLabel,
-      titleLabel: titleLabel,
+      minLabel: TextComponent(
+        text: '$_minSvgComponents',
+        textRenderer: textRenderer,
+      ),
+      currentLabel: TextComponent(
+        text: '$numSvgComponents',
+        textRenderer: textRenderer,
+      ),
+      maxLabel: TextComponent(
+        text: '$_maxSvgComponents',
+        textRenderer: textRenderer,
+      ),
+      titleLabel: TextComponent(
+        text: 'Components',
+        textRenderer: textRenderer,
+      ),
     );
     sliderComponent.valueNotifier.addListener(() {
       final value = sliderComponent.value;
       final numSvgs = value.toInt();
       if (_numSvgs != numSvgs) {
-        currentLabel.text = numSvgs.toString();
+        sliderComponent.currentLabel?.text = numSvgs.toString();
         _numSvgs = numSvgs;
         removeSvgs();
         addSvgs();
@@ -254,7 +250,7 @@ class MyGame extends FlameGame with TapCallbacks {
 
   void addSvgButton(Vector2 buttonSize, {required double y}) {
     svgButtonComponent = AdvancedButtonComponent(
-      priority: 10,
+      priority: _uiPriority,
       position: Vector2(size.x * 0.5, y),
       size: buttonSize,
       anchor: .topCenter,
@@ -283,7 +279,7 @@ class MyGame extends FlameGame with TapCallbacks {
 
   void addModeButton(Vector2 buttonSize, {required double y}) {
     modeComponent = AdvancedButtonComponent(
-      priority: 10,
+      priority: _uiPriority,
       position: Vector2(20, y),
       size: buttonSize,
       anchor: .topLeft,
@@ -311,7 +307,7 @@ class MyGame extends FlameGame with TapCallbacks {
 
   void addSizeButton(Vector2 buttonSize, {required double y}) {
     sizeComponent = AdvancedButtonComponent(
-      priority: 10,
+      priority: _uiPriority,
       position: Vector2(size.x - 20, y),
       size: buttonSize,
       anchor: .topRight,
