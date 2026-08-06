@@ -57,6 +57,9 @@ class MyGame extends FlameGame with TapCallbacks {
 
   Vector2 get center => Vector2(size.x * 0.5, size.y * 0.5);
 
+  double get rotateAmplitude => pi * 2.0;
+  double get rotateDuration => 2.0;
+
   late AdvancedButtonComponent sizeComponent;
   late TextComponent sizeText;
   late AdvancedButtonComponent modeComponent;
@@ -166,9 +169,9 @@ class MyGame extends FlameGame with TapCallbacks {
     svgComponent = svg;
 
     final rotate = RotateEffect.by(
-      pi * 2,
+      rotateAmplitude,
       EffectController(
-        duration: 2,
+        duration: rotateDuration,
         infinite: true,
       ),
     );
@@ -342,10 +345,12 @@ class MyGame extends FlameGame with TapCallbacks {
     final center = this.center;
     final svgSize = center * 0.5;
     final radius = (center.x + center.y) * 0.25;
-    final step = (pi * 2.0) / numSvgComponents.toDouble();
+    final step = rotateAmplitude / numSvgComponents.toDouble();
     final sStep = 0.66667 / numSvgComponents.toDouble();
     final aStep = 0.75 / numSvgComponents.toDouble();
+    final rStep = (rotateDuration * 0.5) / numSvgComponents.toDouble();
 
+    var delay = 0.0;
     var angle = step;
     var sScale = 1.0;
     var aScale = 1.0;
@@ -368,7 +373,17 @@ class MyGame extends FlameGame with TapCallbacks {
         priority: _numSvgs + _svgPriority - i,
       );
       svgs.add(s);
+      final rotate = RotateEffect.by(
+        rotateAmplitude,
+        EffectController(
+          duration: rotateDuration,
+          startDelay: delay,
+          infinite: true,
+        ),
+      );
+      s.add(rotate);
       angle += step;
+      delay += rStep;
       sScale -= sStep;
       aScale -= aStep;
     }
