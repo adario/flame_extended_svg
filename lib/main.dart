@@ -32,7 +32,7 @@ class MyGame extends FlameGame with TapCallbacks {
   var _masterAngle = 0.0;
   final int _minSvgComponents = 10;
   final int _maxSvgComponents = 500;
-  int _numSvgs = 200;
+  int _numSvgs = 100;
   int get numSvgComponents => _numSvgs;
   int _currentSvg = 0;
   final List<String> _svgs = [
@@ -213,7 +213,7 @@ class MyGame extends FlameGame with TapCallbacks {
   void addSliderButton(double y) {
     sliderComponent = SliderButtonComponent(
       priority: _uiPriority,
-      position: Vector2(size.x * 0.5, y),
+      position: Vector2(center.x, y),
       size: Vector2(size.x * 0.75, 60),
       anchor: .center,
       labelSpacing: 8,
@@ -237,24 +237,26 @@ class MyGame extends FlameGame with TapCallbacks {
         text: 'Components',
         textRenderer: textRenderer,
       ),
+      valueListener: _sliderListener,
     );
-    sliderComponent.valueNotifier.addListener(() {
-      final value = sliderComponent.value;
-      final numSvgs = value.toInt();
-      if (_numSvgs != numSvgs) {
-        sliderComponent.currentLabel?.text = numSvgs.toString();
-        _numSvgs = numSvgs;
-        removeSvgs();
-        addSvgs();
-      }
-    });
     add(sliderComponent);
+  }
+
+  Future<void> _sliderListener() async {
+    final value = sliderComponent.value;
+    final numSvgs = value.toInt();
+    if (_numSvgs != numSvgs) {
+      sliderComponent.currentLabel?.text = numSvgs.toString();
+      _numSvgs = numSvgs;
+      removeSvgs();
+      addSvgs();
+    }
   }
 
   void addSvgButton(Vector2 buttonSize, {required double y}) {
     svgButtonComponent = AdvancedButtonComponent(
       priority: _uiPriority,
-      position: Vector2(size.x * 0.5, y),
+      position: Vector2(center.x, y),
       size: buttonSize,
       anchor: .topCenter,
       defaultLabel: TextComponent(

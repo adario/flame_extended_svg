@@ -30,6 +30,7 @@ class SliderButtonComponent extends PositionComponent
     super.size,
     super.priority,
     super.anchor,
+    this.valueListener,
   }) : assert(min < max),
        assert(initialValue >= min && initialValue <= max),
        valueNotifier = ValueNotifier<double>(initialValue);
@@ -55,6 +56,7 @@ class SliderButtonComponent extends PositionComponent
   final TextComponent? titleLabel;
 
   final ValueNotifier<double> valueNotifier;
+  final VoidCallback? valueListener;
 
   double get value => valueNotifier.value;
   set value(double newValue) {
@@ -76,7 +78,6 @@ class SliderButtonComponent extends PositionComponent
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    valueNotifier.addListener(_handleValueChanged);
 
     _track = track ?? RoundedRectComponent()
       ..position = Vector2(0, 0)
@@ -108,7 +109,7 @@ class SliderButtonComponent extends PositionComponent
 
     if (titleLabel != null) {
       final label = titleLabel!;
-      label.anchor = .bottomCenter;
+      label.anchor = .center;
       label.position = Vector2(size.x / 2, -(trackHeight + labelSpacing));
       add(label);
     }
@@ -125,7 +126,19 @@ class SliderButtonComponent extends PositionComponent
   }
 
   @override
+  void onMount() {
+    super.onMount();
+    valueNotifier.addListener(_handleValueChanged);
+    if (valueListener != null) {
+      valueNotifier.addListener(valueListener!);
+    }
+  }
+
+  @override
   void onRemove() {
+    if (valueListener != null) {
+      valueNotifier.removeListener(valueListener!);
+    }
     valueNotifier.removeListener(_handleValueChanged);
     super.onRemove();
   }
