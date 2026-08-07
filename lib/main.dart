@@ -348,7 +348,7 @@ class MyGame extends FlameGame with TapCallbacks {
     final svgSize = center * 0.5;
     final radius = (center.x + center.y) * 0.25;
     final step = rotateAmplitude / numSvgComponents.toDouble();
-    final sStep = 0.66667 / numSvgComponents.toDouble();
+    final sStep = 0.75 / numSvgComponents.toDouble();
     final aStep = 0.75 / numSvgComponents.toDouble();
     final rStep = (rotateDuration * 0.5) / numSvgComponents.toDouble();
 
