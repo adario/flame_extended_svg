@@ -76,6 +76,29 @@ class SliderButtonComponent extends PositionComponent
   late final PositionPaintComponent _thumb;
 
   @override
+  set position(Vector2 position) {
+    super.position = position;
+    _adjustItems();
+  }
+
+  @override
+  set size(Vector2 size) {
+    super.size = size;
+    _adjustItems();
+  }
+
+  void _adjustItems() {
+    _track
+      ..position = Vector2(0, 0)
+      ..size = Vector2(size.x, trackHeight);
+    minLabel?.position = Vector2(0, trackHeight + labelSpacing);
+    currentLabel?.position = Vector2(size.x / 2, trackHeight + labelSpacing);
+    titleLabel?.position = Vector2(size.x / 2, -(trackHeight + labelSpacing));
+    maxLabel?.position = Vector2(size.x, trackHeight + labelSpacing);
+    _syncThumbPosition();
+  }
+
+  @override
   Future<void> onLoad() async {
     await super.onLoad();
 

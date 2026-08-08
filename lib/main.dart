@@ -26,9 +26,11 @@ class MyGame extends FlameGame {
 
   late Svg svgInstance;
   late SvgComponent svgComponent;
-  late TextComponent svgCache;
   late Component svgContainer;
   late Component buttonContainer;
+  late Component hudContainer;
+  late FpsTextComponent fps;
+  late TextComponent svgCache;
 
   var _masterAngle = 0.0;
   final int _minSvgComponents = 10;
@@ -57,6 +59,8 @@ class MyGame extends FlameGame {
   String get svgName => svgFilename.replaceAll('.svg', '');
 
   Vector2 get center => Vector2(size.x * 0.5, size.y * 0.5);
+  Vector2 get svgSize => (center * 0.5)..round();
+  Vector2 get buttonSize => Vector2(90, 30);
 
   double get rotateAmplitude => pi * 2.0;
   double get rotateDuration => 2.0;
@@ -94,14 +98,37 @@ class MyGame extends FlameGame {
     _load();
   }
 
+  static final Vector2 _zero = .zero();
+  Vector2 _gameSize = MyGame._zero;
+
   @override
   void update(double dt) {
     super.update(dt);
     svgCache.text =
         'Cache #: ${svgInstance.cacheUsage}/${_size.quantityString}';
+    if (_gameSize == MyGame._zero) {
+      _gameSize = size;
+    }
   }
 
-  Future<void> _load() async {
+  @override
+  void onGameResize(Vector2 size) {
+    final differs = _gameSize != MyGame._zero && _gameSize != size;
+    super.onGameResize(size);
+    if (differs) {
+      _adjustGameSize(size);
+    }
+  }
+
+  void _adjustGameSize(Vector2 size) {
+    _gameSize = size;
+    _adjustHudComponents();
+    _adjustButtons();
+    _adjustSvgComponent();
+    _adjustSvgs();
+  }
+
+  Future<void> _load({bool file = true}) async {
     _masterAngle = svgComponent.angle;
     final c = children.toList(growable: false);
     removeAll(c);
@@ -109,6 +136,7 @@ class MyGame extends FlameGame {
     await _loadComponents(
       fixedRatio: svgInstance.fixedRatio,
       cacheSize: svgInstance.cacheSize,
+      file: file,
     );
   }
 
@@ -145,24 +173,38 @@ class MyGame extends FlameGame {
       fixedRatio: fixedRatio,
       cacheSize: cacheSize,
     );
-    final svgs = svgContainer.children.toList(growable: false);
-    svgs.forEach(
-      (component) => (component as SvgComponent).svg = svgInstance,
-    );
+    final numChildren = children.length;
+    if (numChildren > 2) {
+      final svgs = svgContainer.children.toList(growable: false);
+      svgs.forEach(
+        (component) => (component as SvgComponent).svg = svgInstance,
+      );
+    }
   }
 
   Future _loadComponents({
     bool fixedRatio = false,
     int cacheSize = Svg.defaultCacheSize,
+    bool file = true,
   }) async {
+    if (file) {
+      await _loadSvg(fixedRatio: fixedRatio, cacheSize: cacheSize);
+    }
+
+    addSvgComponent();
+    addSvgs();
+    addButtons();
+    addHudComponents();
+  }
+
+  void addSvgComponent() {
     svgContainer = Component();
     add(svgContainer);
-    await _loadSvg(fixedRatio: fixedRatio, cacheSize: cacheSize);
     final svg = SvgComponent(
       key: ComponentKey.named(svgFilename),
       svg: svgInstance,
       position: center,
-      size: center * 0.5,
+      size: svgSize,
       angle: _masterAngle,
       anchor: .center,
     );
@@ -177,41 +219,65 @@ class MyGame extends FlameGame {
       ),
     );
     svg.add(rotate);
+  }
 
-    final fps = FpsTextComponent(
+  void _adjustSvgComponent() {
+    svgComponent.position = center;
+    svgComponent.size = svgSize;
+  }
+
+  void addHudComponents() {
+    hudContainer = Component(priority: _hudPriority);
+    add(hudContainer);
+
+    fps = FpsTextComponent(
       decimalPlaces: 1,
       windowSize: 30,
-      priority: _hudPriority,
       position: Vector2(10, size.y - 30),
       anchor: .bottomLeft,
       textRenderer: textRenderer,
     );
-    add(fps);
+    hudContainer.add(fps);
 
     svgCache = TextComponent(
       text: '…',
-      priority: _hudPriority,
       position: Vector2(size.x - 10, size.y - 30),
       anchor: .bottomRight,
       textRenderer: textRenderer,
     );
-    add(svgCache);
+    hudContainer.add(svgCache);
+  }
 
-    addSvgs();
-    addButtons();
+  void _adjustHudComponents() {
+    fps.position = Vector2(10, size.y - 30);
+    svgCache.position = Vector2(size.x - 10, size.y - 30);
   }
 
   void addButtons() {
     buttonContainer = Component(priority: _uiPriority);
     add(buttonContainer);
 
-    final buttonSize = Vector2(90, 30);
     final y = size.y * (kIsWeb ? 0.025 : 0.075);
-    addSizeButton(buttonSize, y: y);
-    addModeButton(buttonSize, y: y);
-    addSvgButton(buttonSize, y: y);
+    addSizeButton(y);
+    addModeButton(y);
+    addSvgButton(y);
 
-    addSliderButton(size.y * (kIsWeb ? 0.2 : 0.25));
+    final sliderY = size.y * (kIsWeb ? 0.2 : 0.25);
+    addSliderButton(sliderY);
+  }
+
+  void _adjustButtons() {
+    final y = size.y * (kIsWeb ? 0.025 : 0.075);
+    sizeComponent.position = Vector2(size.x - 20, y);
+    sizeText.position = sizeComponent.position + Vector2(-buttonSize.x / 2, 30);
+    modeComponent.position = Vector2(20, y);
+    modeText.position = modeComponent.position + Vector2(buttonSize.x / 2, 30);
+    svgButtonComponent.position = Vector2(center.x, y);
+    svgButtonText.position = svgButtonComponent.position + Vector2(0, 30);
+
+    final sliderY = size.y * (kIsWeb ? 0.2 : 0.25);
+    sliderComponent.position = Vector2(center.x, sliderY);
+    sliderComponent.size = Vector2(size.x * 0.75, 60);
   }
 
   void addSliderButton(double y) {
@@ -256,7 +322,7 @@ class MyGame extends FlameGame {
     }
   }
 
-  void addSvgButton(Vector2 buttonSize, {required double y}) {
+  void addSvgButton(double y) {
     svgButtonComponent = CancellableButtonComponent(
       position: Vector2(center.x, y),
       size: buttonSize,
@@ -283,7 +349,7 @@ class MyGame extends FlameGame {
     buttonContainer.add(svgButtonText);
   }
 
-  void addModeButton(Vector2 buttonSize, {required double y}) {
+  void addModeButton(double y) {
     modeComponent = CancellableButtonComponent(
       position: Vector2(20, y),
       size: buttonSize,
@@ -302,7 +368,6 @@ class MyGame extends FlameGame {
     buttonContainer.add(modeComponent);
     modeText = TextComponent(
       text: '$_mode',
-      priority: modeComponent.priority,
       anchor: .topCenter,
       position: modeComponent.position + Vector2(buttonSize.x / 2, 30),
       textRenderer: textRenderer,
@@ -310,7 +375,7 @@ class MyGame extends FlameGame {
     buttonContainer.add(modeText);
   }
 
-  void addSizeButton(Vector2 buttonSize, {required double y}) {
+  void addSizeButton(double y) {
     sizeComponent = CancellableButtonComponent(
       position: Vector2(size.x - 20, y),
       size: buttonSize,
@@ -341,9 +406,36 @@ class MyGame extends FlameGame {
     svgContainer.removeWhere((component) => component != svgComponent);
   }
 
+  void _adjustSvgs() {
+    final center = this.center;
+    final radius = (center.x + center.y) * 0.25;
+    final step = rotateAmplitude / numSvgComponents.toDouble();
+    final svgs = svgContainer.children.reversed().toList();
+    final last = svgs.removeLast();
+    assert(
+      last == svgComponent,
+      'Wrong master component: $svgComponent -> $last',
+    );
+    assert(svgs.length == _numSvgs, 'Wrong SVG #: $_numSvgs -> ${svgs.length}');
+
+    var angle = step;
+    for (final svg in svgs) {
+      final isSvg = svg is SvgComponent;
+      assert(isSvg, 'Wrong component: $svg');
+      if (!isSvg) {
+        continue;
+      }
+      svg.position = Vector2(
+        center.x + (radius * cos(angle)),
+        center.y + (radius * sin(angle)),
+      );
+      svg.size = svgSize;
+      angle += step;
+    }
+  }
+
   void addSvgs() {
     final center = this.center;
-    final svgSize = center * 0.5;
     final radius = (center.x + center.y) * 0.25;
     final step = rotateAmplitude / numSvgComponents.toDouble();
     final sStep = 0.75 / numSvgComponents.toDouble();
