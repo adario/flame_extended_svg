@@ -3,10 +3,10 @@ import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
-import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/palette.dart';
 import 'package:flame/text.dart';
+import 'package:flame_extended_svg/cancellable_button_component.dart';
 import 'package:flame_extended_svg/rounded_rect_component.dart';
 import 'package:flame_extended_svg/slider_button_component.dart';
 import 'package:flame_extended_svg/svg_cache_mode.dart';
@@ -19,7 +19,7 @@ void main() {
   runApp(GameWidget(game: MyGame()));
 }
 
-class MyGame extends FlameGame with TapCallbacks {
+class MyGame extends FlameGame {
   static const _uiPriority = 1000;
   static const _hudPriority = 10000;
   static const _svgPriority = 1;
@@ -28,6 +28,7 @@ class MyGame extends FlameGame with TapCallbacks {
   late SvgComponent svgComponent;
   late TextComponent svgCache;
   late Component svgContainer;
+  late Component buttonContainer;
 
   var _masterAngle = 0.0;
   final int _minSvgComponents = 10;
@@ -201,6 +202,9 @@ class MyGame extends FlameGame with TapCallbacks {
   }
 
   void addButtons() {
+    buttonContainer = Component(priority: _uiPriority);
+    add(buttonContainer);
+
     final buttonSize = Vector2(90, 30);
     final y = size.y * (kIsWeb ? 0.025 : 0.075);
     addSizeButton(buttonSize, y: y);
@@ -212,7 +216,6 @@ class MyGame extends FlameGame with TapCallbacks {
 
   void addSliderButton(double y) {
     sliderComponent = SliderButtonComponent(
-      priority: _uiPriority,
       position: Vector2(center.x, y),
       size: Vector2(size.x * 0.75, 60),
       anchor: .center,
@@ -239,7 +242,7 @@ class MyGame extends FlameGame with TapCallbacks {
       ),
       valueListener: _sliderListener,
     );
-    add(sliderComponent);
+    buttonContainer.add(sliderComponent);
   }
 
   Future<void> _sliderListener() async {
@@ -254,8 +257,7 @@ class MyGame extends FlameGame with TapCallbacks {
   }
 
   void addSvgButton(Vector2 buttonSize, {required double y}) {
-    svgButtonComponent = AdvancedButtonComponent(
-      priority: _uiPriority,
+    svgButtonComponent = CancellableButtonComponent(
       position: Vector2(center.x, y),
       size: buttonSize,
       anchor: .topCenter,
@@ -271,20 +273,18 @@ class MyGame extends FlameGame with TapCallbacks {
         _applySvg();
       },
     );
-    add(svgButtonComponent);
+    buttonContainer.add(svgButtonComponent);
     svgButtonText = TextComponent(
       text: svgName,
-      priority: svgButtonComponent.priority,
       anchor: .topCenter,
       position: svgButtonComponent.position + Vector2(0, 30),
       textRenderer: textRenderer,
     );
-    add(svgButtonText);
+    buttonContainer.add(svgButtonText);
   }
 
   void addModeButton(Vector2 buttonSize, {required double y}) {
-    modeComponent = AdvancedButtonComponent(
-      priority: _uiPriority,
+    modeComponent = CancellableButtonComponent(
       position: Vector2(20, y),
       size: buttonSize,
       anchor: .topLeft,
@@ -299,7 +299,7 @@ class MyGame extends FlameGame with TapCallbacks {
         _applyMode();
       },
     );
-    add(modeComponent);
+    buttonContainer.add(modeComponent);
     modeText = TextComponent(
       text: '$_mode',
       priority: modeComponent.priority,
@@ -307,12 +307,11 @@ class MyGame extends FlameGame with TapCallbacks {
       position: modeComponent.position + Vector2(buttonSize.x / 2, 30),
       textRenderer: textRenderer,
     );
-    add(modeText);
+    buttonContainer.add(modeText);
   }
 
   void addSizeButton(Vector2 buttonSize, {required double y}) {
-    sizeComponent = AdvancedButtonComponent(
-      priority: _uiPriority,
+    sizeComponent = CancellableButtonComponent(
       position: Vector2(size.x - 20, y),
       size: buttonSize,
       anchor: .topRight,
@@ -328,15 +327,14 @@ class MyGame extends FlameGame with TapCallbacks {
         _applySize();
       },
     );
-    add(sizeComponent);
+    buttonContainer.add(sizeComponent);
     sizeText = TextComponent(
       text: '$_size',
-      priority: sizeComponent.priority,
       anchor: .topCenter,
       position: sizeComponent.position + Vector2(-buttonSize.x / 2, 30),
       textRenderer: textRenderer,
     );
-    add(sizeText);
+    buttonContainer.add(sizeText);
   }
 
   void removeSvgs() {
