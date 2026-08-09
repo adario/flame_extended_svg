@@ -331,9 +331,9 @@ class MyGame extends FlameGame {
         text: 'Svg',
         textRenderer: textRenderer,
       ),
-      defaultSkin: RoundedRectComponent()..setColor(BasicPalette.orange.color),
+      defaultSkin: RoundedRectComponent()..setColor(BasicPalette.darkGreen.color),
       downSkin: RoundedRectComponent()
-        ..setColor(BasicPalette.lightOrange.color),
+        ..setColor(BasicPalette.lightGreen.color),
       onReleased: () {
         _currentSvg = (_currentSvg + 1) % _svgs.length;
         _applySvg();
