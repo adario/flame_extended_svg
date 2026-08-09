@@ -35,11 +35,11 @@ dev_dependencies:
 dependency_overrides:
   flame:
     git:
-      url: https://github.com/adario/flame.git
+      url: https://github.com/flame-engine/flame
       path: packages/flame
   flame_svg:
     git:
-      url: https://github.com/adario/flame.git
+      url: https://github.com/flame-engine/flame
       path: packages/flame_svg
 
 flutter:
