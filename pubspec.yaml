@@ -45,6 +45,7 @@ dependency_overrides:
 flutter:
   uses-material-design: true
   assets:
+    - assets/tiger.svg
     - assets/android.svg
     - assets/spaceship.svg
     - assets/cone.svg

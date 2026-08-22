@@ -54,6 +54,7 @@ class MyGame extends FlameGame {
     'robot.svg',
     'shuttle.svg',
     'rocket_ship.svg',
+    'tiger.svg',
   ];
   String get svgFilename => _svgs[_currentSvg];
   String get svgName => svgFilename.replaceAll('.svg', '');
@@ -331,9 +332,9 @@ class MyGame extends FlameGame {
         text: 'Svg',
         textRenderer: textRenderer,
       ),
-      defaultSkin: RoundedRectComponent()..setColor(BasicPalette.darkGreen.color),
-      downSkin: RoundedRectComponent()
-        ..setColor(BasicPalette.lightGreen.color),
+      defaultSkin: RoundedRectComponent()
+        ..setColor(BasicPalette.darkGreen.color),
+      downSkin: RoundedRectComponent()..setColor(BasicPalette.lightGreen.color),
       onReleased: () {
         _currentSvg = (_currentSvg + 1) % _svgs.length;
         _applySvg();
