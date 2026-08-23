@@ -57,7 +57,9 @@ class MyGame extends FlameGame {
     'tiger.svg',
   ];
   String get svgFilename => _svgs[_currentSvg];
-  String get svgName => svgFilename.replaceAll('.svg', '');
+  Size get svgDimension => svgInstance.pictureInfo.size;
+  String get svgName =>
+      '${svgFilename.replaceAll('.svg', '')} ${svgDimension.width.toInt()}x${svgDimension.height.toInt()}';
 
   Vector2 get center => Vector2(size.x * 0.5, size.y * 0.5);
   Vector2 get svgSize => (center * 0.5)..round();
@@ -158,11 +160,11 @@ class MyGame extends FlameGame {
 
   Future<void> _applySvg() async {
     _masterAngle = svgComponent.angle;
-    svgButtonText.text = svgName;
-    _loadSvg(
+    await _loadSvg(
       fixedRatio: svgInstance.fixedRatio,
       cacheSize: svgInstance.cacheSize,
     );
+    svgButtonText.text = svgName;
   }
 
   Future _loadSvg({
