@@ -39,27 +39,22 @@ class MyGame extends FlameGame {
   int get numSvgComponents => _numSvgs;
   int _currentSvg = 0;
   final List<String> _svgs = [
-    'android.svg',
-    'cone.svg',
-    'pyramid.svg',
-    'prism.svg',
-    'spaceship.svg',
-    'spaceship_2.svg',
-    // 'spaceship_3.svg',
-    // 'spaceship_4.svg',
-    // 'spaceship_5.svg',
-    'spaceship_6.svg',
-    // 'falcon.svg',
-    // 'cylon.svg',
-    'robot.svg',
-    // 'shuttle.svg',
-    'rocket_ship.svg',
-    'tiger.svg',
+    'android',
+    'cone',
+    'pyramid',
+    'prism',
+    'spaceship',
+    'spaceship_2',
+    'spaceship_6',
+    'robot',
+    'rocket_ship',
+    'tiger',
   ];
   String get svgFilename => _svgs[_currentSvg];
-  Size get svgDimension => svgInstance.pictureInfo.size;
+  String get svgPathname => 'assets/$svgFilename.svg';
+  Size get svgPISize => svgInstance.pictureInfo.size;
   String get svgName =>
-      '${svgFilename.replaceAll('.svg', '')} ${svgDimension.width.toInt()}x${svgDimension.height.toInt()}';
+      '$svgFilename ${svgPISize.width.toInt()}x${svgPISize.height.toInt()}';
 
   Vector2 get center => Vector2(size.x * 0.5, size.y * 0.5);
   Vector2 get svgSize => (center * 0.5)..round();
@@ -81,7 +76,14 @@ class MyGame extends FlameGame {
 
   TextRenderer get textRenderer => TextPaint(
     style: TextStyle(
-      fontSize: 17,
+      fontSize: 18,
+      color: BasicPalette.white.color,
+    ),
+  );
+
+  TextRenderer get textSubRenderer => TextPaint(
+    style: TextStyle(
+      fontSize: 16,
       color: BasicPalette.white.color,
     ),
   );
@@ -172,7 +174,7 @@ class MyGame extends FlameGame {
     int cacheSize = Svg.defaultCacheSize,
   }) async {
     svgInstance = await loadSvg(
-      svgFilename,
+      svgPathname,
       fixedRatio: fixedRatio,
       cacheSize: cacheSize,
     );
@@ -295,15 +297,15 @@ class MyGame extends FlameGame {
       step: 5,
       minLabel: TextComponent(
         text: '$_minSvgComponents',
-        textRenderer: textRenderer,
+        textRenderer: textSubRenderer,
       ),
       currentLabel: TextComponent(
         text: '$numSvgComponents',
-        textRenderer: textRenderer,
+        textRenderer: textSubRenderer,
       ),
       maxLabel: TextComponent(
         text: '$_maxSvgComponents',
-        textRenderer: textRenderer,
+        textRenderer: textSubRenderer,
       ),
       titleLabel: TextComponent(
         text: 'Components',
@@ -347,7 +349,7 @@ class MyGame extends FlameGame {
       text: svgName,
       anchor: .topCenter,
       position: svgButtonComponent.position + Vector2(0, 30),
-      textRenderer: textRenderer,
+      textRenderer: textSubRenderer,
     );
     buttonContainer.add(svgButtonText);
   }
@@ -373,7 +375,7 @@ class MyGame extends FlameGame {
       text: '$_mode',
       anchor: .topCenter,
       position: modeComponent.position + Vector2(buttonSize.x / 2, 30),
-      textRenderer: textRenderer,
+      textRenderer: textSubRenderer,
     );
     buttonContainer.add(modeText);
   }
@@ -400,7 +402,7 @@ class MyGame extends FlameGame {
       text: '$_size',
       anchor: .topCenter,
       position: sizeComponent.position + Vector2(-buttonSize.x / 2, 30),
-      textRenderer: textRenderer,
+      textRenderer: textSubRenderer,
     );
     buttonContainer.add(sizeText);
   }
