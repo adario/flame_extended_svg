@@ -135,12 +135,15 @@ class MyGame extends FlameGame {
 
   Future<void> _load({bool file = true}) async {
     _masterAngle = svgComponent.angle;
-    final c = children.toList(growable: false);
-    removeAll(c);
+    remove(svgContainer);
+    remove(hudContainer);
+    remove(buttonContainer);
+    final fixedRatio = svgInstance.fixedRatio;
+    final cacheSize = svgInstance.cacheSize;
     svgInstance.dispose();
     await _loadComponents(
-      fixedRatio: svgInstance.fixedRatio,
-      cacheSize: svgInstance.cacheSize,
+      fixedRatio: fixedRatio,
+      cacheSize: cacheSize,
       file: file,
     );
   }
