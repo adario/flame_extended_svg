@@ -51,7 +51,7 @@ class MyGame extends FlameGame {
     'tiger',
   ];
   String get svgFilename => _svgs[_currentSvg];
-  String get svgPathname => 'assets/$svgFilename.svg';
+  String get svgPathname => '$svgFilename.svg';
   Size get svgPISize => svgInstance.pictureInfo.size;
   String get svgName =>
       '$svgFilename ${svgPISize.width.toInt()}x${svgPISize.height.toInt()}';
