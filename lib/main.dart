@@ -51,7 +51,7 @@ class MyGame extends FlameGame {
     'tiger',
   ];
   String get svgFilename => _svgs[_currentSvg];
-  String get svgPathname => '$svgFilename.svg';
+  String get svgPathname => 'assets/$svgFilename.svg';
   Size get svgPISize => svgInstance.pictureInfo.size;
   String get svgName =>
       '$svgFilename ${svgPISize.width.toInt()}x${svgPISize.height.toInt()}';
@@ -418,7 +418,7 @@ class MyGame extends FlameGame {
     final center = this.center;
     final radius = (center.x + center.y) * 0.25;
     final step = rotateAmplitude / numSvgComponents.toDouble();
-    final svgs = svgContainer.children.reversed().toList();
+    final svgs = svgContainer.children.reversed.toList();
     final last = svgs.removeLast();
     assert(
       last == svgComponent,
